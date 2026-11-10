@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f1">
+  <title>Sign in · Receipt Ledger</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/login.js" defer></script>
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <a class="brand" href="/" aria-label="Receipt Ledger home"><span class="brand-mark" aria-hidden="true">R</span><span>Receipt Ledger</span></a>
+    <p class="eyebrow">PRIVATE HOME ARCHIVE</p>
+    <h1>Welcome back.</h1>
+    <p class="muted">Sign in to review and organize your receipts.</p>
+    <form id="login-form" action="/login" method="post">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+      <p id="login-error" class="form-error" role="alert" hidden></p>
+      <button class="button button-primary button-wide" type="submit">Continue <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="login-footnote"><span class="lock-icon" aria-hidden="true">⌑</span> Private access on your home network</p>
+  </main>
+</body>
+</html>

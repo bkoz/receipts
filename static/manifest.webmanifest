@@ -1,0 +1,13 @@
+{
+  "name": "Receipt Ledger",
+  "short_name": "Receipts",
+  "description": "A private home receipt archive",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f5f1",
+  "theme_color": "#f4f5f1",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

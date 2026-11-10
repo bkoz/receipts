@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f5f1">
+  <meta name="description" content="A private home receipt archive.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+  <title>Receipt Ledger</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Receipt Ledger home"><span class="brand-mark" aria-hidden="true">R</span><span>Receipt Ledger</span></a>
+      <div class="top-actions">
+        <span class="private-label"><span class="status-dot" aria-hidden="true"></span> Private archive</span>
+        <button id="logout-button" class="quiet-button" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="page-heading" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">YOUR HOME RECORDS</p>
+          <h1 id="page-title">Receipts, in order.</h1>
+          <p class="lede">Save a clear copy, check the details, and keep everything together.</p>
+        </div>
+        <div class="export-actions" aria-label="Export receipts">
+          <a class="button button-secondary" href="/api/receipts.csv" download>Download CSV <span aria-hidden="true">↓</span></a>
+          <a class="button button-secondary" href="/api/receipts.zip" download>All images <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+
+      <section class="upload-card" aria-labelledby="upload-title">
+        <div class="card-heading">
+          <div class="step-icon" aria-hidden="true">01</div>
+          <div>
+            <p class="eyebrow">ADD A RECEIPT</p>
+            <h2 id="upload-title">Start with an image</h2>
+          </div>
+        </div>
+        <p class="section-copy">Take a picture or choose one from your library. We’ll suggest the key details for you to review.</p>
+        <input id="camera-input" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+        <input id="library-input" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp">
+        <div class="upload-buttons">
+          <button id="camera-button" class="button button-primary" type="button"><span class="camera-icon" aria-hidden="true">◉</span> Take a photo</button>
+          <button id="library-button" class="button button-outline" type="button"><span aria-hidden="true">＋</span> Choose an image</button>
+          <span class="upload-hint">JPEG, PNG or WebP · up to 15 MB</span>
+        </div>
+        <div id="upload-status" class="status-message" role="status" aria-live="polite" hidden></div>
+      </section>
+
+      <section id="review-card" class="review-card" aria-labelledby="review-title" hidden>
+        <div class="card-heading review-heading">
+          <div class="step-icon step-icon-active" aria-hidden="true">02</div>
+          <div>
+            <p class="eyebrow">CHECK BEFORE SAVING</p>
+            <h2 id="review-title">Review the details</h2>
+          </div>
+          <button id="discard-button" class="quiet-button discard-button" type="button">Discard</button>
+        </div>
+        <p id="review-filename" class="file-label"></p>
+        <div class="review-grid">
+          <div class="preview-panel"><img id="receipt-preview" alt="Selected receipt preview"><p>Original image</p></div>
+          <form id="receipt-form" class="receipt-form">
+            <label class="field-full" for="merchant">Merchant <span>optional</span>
+              <input id="merchant" name="merchant" type="text" maxlength="200" autocomplete="organization" placeholder="Unknown">
+            </label>
+            <label for="receipt_date">Date <span>optional</span>
+              <input id="receipt_date" name="receipt_date" type="date">
+            </label>
+            <label for="receipt_time">Time <span>as printed</span>
+              <input id="receipt_time" name="receipt_time" type="time" step="1">
+            </label>
+            <label for="currency">Currency <span>ISO code</span>
+              <input id="currency" name="currency" type="text" maxlength="3" inputmode="text" placeholder="USD" autocomplete="off">
+            </label>
+            <label for="subtotal">Subtotal <span>optional</span>
+              <input id="subtotal" name="subtotal" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+            </label>
+            <label for="tax">Tax <span>optional</span>
+              <input id="tax" name="tax" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+            </label>
+            <label class="field-full" for="total">Total <span>optional</span>
+              <input id="total" name="total" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+            </label>
+            <label for="payment">Payment <span>amount tendered or charged</span>
+              <input id="payment" name="payment" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+            </label>
+            <label for="change">Change <span>includes cash back if shown separately</span>
+              <input id="change" name="change" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+            </label>
+            <p class="review-note field-full">Check each suggested value against the image. Leave anything unreadable blank.</p>
+            <div class="item-section field-full">
+              <div class="item-section-heading">
+                <div>
+                  <h3>Receipt items</h3>
+                  <p>Review the description and category for each item.</p>
+                </div>
+                <button id="add-item-button" class="button button-outline" type="button">＋ Add item</button>
+              </div>
+              <div id="items-editor" class="items-editor"></div>
+            </div>
+            <div class="form-actions field-full">
+              <button id="save-button" class="button button-primary" type="submit">Save receipt <span aria-hidden="true">→</span></button>
+              <span id="save-status" class="save-status" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="archive-section" aria-labelledby="archive-title">
+        <div class="archive-heading">
+          <div>
+            <p class="eyebrow">SAVED LOCALLY</p>
+            <h2 id="archive-title">Your archive <span id="receipt-count" class="count-badge">0</span></h2>
+          </div>
+          <button id="refresh-button" class="quiet-button" type="button">Refresh <span aria-hidden="true">↻</span></button>
+        </div>
+        <div id="receipt-list" class="receipt-list" aria-live="polite">
+          <div class="empty-state"><span class="empty-icon" aria-hidden="true">▤</span><p>No receipts yet.</p><span>Your saved receipts will appear here.</span></div>
+        </div>
+      </section>
+      <footer class="app-footer"><span>Stored on this device.</span><span>Unknown details stay blank.</span></footer>
+    </main>
+  </div>
+</body>
+</html>
