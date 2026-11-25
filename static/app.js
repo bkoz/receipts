@@ -188,14 +188,28 @@ function makeReceiptCard(receipt) {
   return article;
 }
 
+function sortReceiptsNewestFirst(receipts) {
+  const receiptDate = (receipt) => receipt.receipt_date || "";
+  const createdAt = (receipt) => receipt.created_at || "";
+  return [...receipts].sort((a, b) => {
+    // Newest receipt date first; receipts without a date sort last by when they were saved.
+    const byDate = receiptDate(b).localeCompare(receiptDate(a));
+    if (byDate) return byDate;
+    const bySaved = createdAt(b).localeCompare(createdAt(a));
+    if (bySaved) return bySaved;
+    return (b.id || "").localeCompare(a.id || "");
+  });
+}
+
 async function loadReceipts() {
   const list = byId("receipt-list");
   try {
     const response = await api("/api/receipts");
     const { receipts } = await response.json();
-    byId("receipt-count").textContent = String(receipts.length);
+    const sorted = sortReceiptsNewestFirst(receipts);
+    byId("receipt-count").textContent = String(sorted.length);
     list.replaceChildren();
-    if (!receipts.length) {
+    if (!sorted.length) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
       const icon = document.createElement("span");
@@ -209,7 +223,7 @@ async function loadReceipts() {
       empty.append(icon, title, note);
       list.append(empty);
     } else {
-      receipts.forEach((receipt) => list.append(makeReceiptCard(receipt)));
+      sorted.forEach((receipt) => list.append(makeReceiptCard(receipt)));
     }
   } catch (error) {
     list.textContent = error.message;
