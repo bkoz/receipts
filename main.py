@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import io
 import json
+import logging
 import os
 import re
 import shutil
@@ -31,6 +32,9 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 ROOT = Path(__file__).resolve().parent
+
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 
 def read_dotenv(path: Path) -> dict[str, str]:
@@ -811,7 +815,7 @@ def call_vision_endpoint(image_data: bytes, mime: str) -> dict[str, Any]:
         ]}],
         "max_completion_tokens": 3000,
     }).encode("utf-8")
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    headers = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Receipt Ledger"}
     if LLM_API_KEY:
         headers["Authorization"] = f"Bearer {LLM_API_KEY}"
     req = urllib.request.Request(chat_completions_url(LLM_BASE_URL), data=payload, headers=headers, method="POST")
@@ -847,6 +851,7 @@ async def extract_receipt(file: UploadFile = File(...)):
     image_data = b"".join(parts)
     mime, extension = validate_image(image_data)
     staged_id = uuid.uuid4().hex
+    LOGGER.info("extraction started: staged_id=%s model=%s", staged_id, LLM_MODEL)
     metadata_path, _ = stage_paths(staged_id)
     stored_filename = staged_id + extension
     image_path = STAGING_DIR / stored_filename
@@ -871,6 +876,7 @@ async def extract_receipt(file: UploadFile = File(...)):
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
+        LOGGER.info("extraction completed: staged_id=%s items=%d", staged_id, len(extraction["items"]))
         return {
             "staged_id": staged_id,
             "original_filename": original_filename,
