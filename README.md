@@ -20,6 +20,57 @@ The script uses the project's `.venv` and listens on `0.0.0.0:8000` by default. 
 
 Open `http://<this-computer>:8000` from a device on your home network. Do not forward the port to the public internet. For use over HTTPS, set `COOKIE_SECURE=true` when your trusted TLS proxy terminates HTTPS.
 
+## Service management (systemd)
+
+The app runs as a systemd user service named `receipts`. Its unit file is at `~/.config/systemd/user/receipts.service`:
+
+```
+[Unit]
+Description=Receipt Ledger web app
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/apps/receipts
+EnvironmentFile=-/opt/apps/receipts/.env
+ExecStart=/opt/apps/receipts/.venv/bin/uvicorn main:app --app-dir /opt/apps/receipts --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+`EnvironmentFile=-` points at the app's `.env`; the leading `-` means a missing file is ignored. `ExecStart` is equivalent to running `./run.sh`. The unit is enabled at login via `~/.config/systemd/user/default.target.wants/receipts.service`.
+
+Useful commands (user units):
+
+```sh
+systemctl --user start receipts
+systemctl --user stop receipts
+systemctl --user restart receipts
+systemctl --user status receipts
+systemctl --user daemon-reload    # after editing the unit file
+
+journalctl --user -u receipts           # logs
+journalctl --user -u receipts --follow  # live logs
+```
+
+Enable or disable automatic start:
+
+```sh
+systemctl --user enable receipts
+systemctl --user disable receipts
+```
+
+Summary of the app's environment file (`/opt/apps/receipts/.env`), with sensitive values obfuscated:
+
+- `APP_PASSWORD=<redacted>` — required by the app.
+- `LLM_BASE_URL=https://opencode.ai/inference/openai/v1/chat/completions`
+- `LLM_MODEL=gpt-6-luna`
+- `LLM_API_KEY=<redacted>` — the `.env` comment notes it expires on 11/25/2026.
+- `DATA_DIR=./data`
+- `COOKIE_SECURE=false`
+
 ## Settings
 
 Process environment variables take precedence over `.env` values. `APP_PASSWORD` is required. `LLM_BASE_URL` defaults to `https://api.openai.com/v1`, `LLM_MODEL` defaults to `gpt-5.4-mini`, and `LLM_API_KEY` is optional for compatible local endpoints that do not require a key. The default `DATA_DIR` is `./data`; its database, image originals, and temporary uploads are excluded from version control.
